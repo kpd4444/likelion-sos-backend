@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>회원 목록</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1 {
+            font-size: 2em;
+            font-weight: bold;
+        }
+        button {
+            padding: 8px 16px;
+            font-size: 1em;
+            cursor: pointer;
+        }
+        ul {
+            margin-top: 20px;
+            padding-left: 0;
+            list-style: none;
+        }
+        li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<h1>회원 목록</h1>
+<button onclick="loadMembers()">불러오기</button>
+<ul id="memberList"></ul>
+
+<script>
+    function loadMembers() {
+        fetch('/api/members')
+            .then(res => res.json())
+            .then(result => {
+                const members = result.data; // 중요: 배열만 추출
+                const list = document.getElementById('memberList');
+                list.innerHTML = ''; // 초기화
+
+                members.forEach(member => {
+                    const li = document.createElement('li');
+                    li.textContent = `${member.email} (${member.nickname})`;
+                    list.appendChild(li);
+                });
+            })
+            .catch(err => {
+                alert('회원 정보를 불러오는 데 실패했습니다.');
+                console.error(err);
+            });
+    }
+</script>
+</body>
+</html>

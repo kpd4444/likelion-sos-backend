@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+</head>
+<body>
+<h1>회원가입</h1>
+<form id="signup-form">
+    이메일: <input type="email" id="email" required><br><br>
+    비밀번호: <input type="password" id="password" required><br><br>
+    비밀번호 확인: <input type="password" id="passwordConfirm" required><br><br>
+    닉네임: <input type="text" id="nickname" required><br><br>
+    <button type="submit">가입하기</button>
+</form>
+
+<script>
+    document.getElementById("signup-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+        const passwordConfirm = document.getElementById("passwordConfirm").value;
+        const nickname = document.getElementById("nickname").value;
+
+        if (password !== passwordConfirm) {
+            alert("비밀번호가 일치하지 않습니다.");
+            return;
+        }
+
+        fetch("/api/signup", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email, password, nickname }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                if (data.status === "success") location.href = "/login.html";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("회원가입 중 오류가 발생했습니다.");
+            });
+    });
+</script>
+</body>
+</html>

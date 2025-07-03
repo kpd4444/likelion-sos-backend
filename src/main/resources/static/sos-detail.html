@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SOS 요청 상세보기</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+        h1 {
+            font-size: 32px;
+            font-weight: bold;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 10px;
+        }
+        .sos-detail {
+            margin-top: 30px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .sos-detail p {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        .label {
+            font-weight: bold;
+            color: #555;
+        }
+        a.chat-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a.chat-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h1>SOS 요청 상세보기</h1>
+
+<div class="sos-detail" id="sos-detail-box">
+    <p>로딩 중...</p>
+</div>
+
+<div id="complete-form-container" style="display: none; margin-top: 20px;">
+    <label for="helper-nickname" class="label">도움 준 사람 닉네임:</label>
+    <input type="text" id="helper-nickname" placeholder="닉네임 입력" style="padding: 8px; width: 100%; margin-bottom: 10px;">
+    <button id="complete-btn" style="padding: 10px 16px; background-color: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;">
+        ✅ SOS 완료 처리
+    </button>
+    <p id="complete-message" style="margin-top: 15px; font-weight: bold;"></p>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get("id");
+
+    if (!id) {
+        alert("요청 ID가 잘못되었습니다.");
+        throw new Error("Invalid ID");
+    }
+
+    fetch(`/api/sos/${id}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                const item = data.data;
+                const box = document.getElementById("sos-detail-box");
+
+                box.innerHTML = `
+                    <p><span class="label">제목:</span> ${item.title || '없음'}</p>
+                    <p><span class="label">작성자:</span> ${item.requesterNickname || '알 수 없음'}</p>
+                    <p><span class="label">건물:</span> ${item.building || '미지정'}</p>
+                    <p><span class="label">내용:</span><br>${item.content || '없음'}</p>
+                    <p><a class="chat-link" href="${item.openChatUrl}" target="_blank">오픈채팅방 입장</a></p>
+                    <p><span class="label">상태:</span> ${item.status || '알 수 없음'}</p>
+                `;
+
+                // ✅ 상태가 "SOS"라는 단어를 포함하면 완료버튼 표시
+                if (item.status && item.status.includes('SOS')) {
+                    document.getElementById("complete-form-container").style.display = "block";
+                }
+
+            } else {
+                alert("상세 정보를 불러오는 데 실패했습니다.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("서버 오류가 발생했습니다.");
+        });
+
+    document.getElementById("complete-btn").addEventListener("click", function () {
+        const nickname = document.getElementById("helper-nickname").value;
+        if (!nickname) {
+            alert("닉네임을 입력해주세요.");
+            return;
+        }
+
+        fetch("/api/sos/complete", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                sosRequestId: Number(id),
+                helperNickname: nickname
+            })
+        })
+            .then(res => {
+                if (!res.ok) return res.text().then(text => { throw new Error(text); });
+                return res.text();
+            })
+            .then(msg => {
+                document.getElementById("complete-message").textContent = msg;
+                document.getElementById("complete-form-container").style.display = "none";
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("complete-message").textContent = "❌ 오류 발생: " + err.message;
+            });
+    });
+</script>
+</body>
+</html>

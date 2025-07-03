@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>내 SOS 상태</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fff8f0;
+            padding: 40px;
+            color: #333;
+        }
+
+        .status-card {
+            max-width: 400px;
+            margin: 0 auto;
+            border: 2px solid #f0c36d;
+            border-radius: 10px;
+            background-color: #fffdf9;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .status-header {
+            background-color: #fff1c1;
+            padding: 20px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            border-bottom: 1px solid #f0c36d;
+        }
+
+        .status-body {
+            padding: 25px;
+            text-align: center;
+        }
+
+        .nickname {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .sos-info {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        .emoji {
+            font-size: 24px;
+            margin-right: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align: center;">🚨 내 SOS 상태</h1>
+
+<div class="status-card" id="status-box">
+    <div class="status-header">USER 정보</div>
+    <div class="status-body" id="status-body">
+        로딩 중...
+    </div>
+</div>
+
+<script>
+    fetch("/api/sos/my-status")
+        .then(res => res.json())
+        .then(data => {
+            const body = document.getElementById("status-body");
+
+            if (data.status === "success") {
+                const user = data.data;
+                body.innerHTML = `
+                    <div class="nickname">👤 사용자: <strong>${user.nickname}</strong></div>
+                     <div class="sos-info">👑 레벨: <strong>${user.level}</strong></div>
+                    <div class="sos-info">🔥 SOS 포인트: <strong>${user.point}</strong></div>
+                `;
+            } else {
+                body.innerHTML = `<div class="sos-info">⚠️ ${data.message}</div>`;
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            const body = document.getElementById("status-body");
+            body.innerHTML = `<div class="sos-info">🚫 서버 오류가 발생했습니다.</div>`;
+        });
+</script>
+
+</body>
+</html>

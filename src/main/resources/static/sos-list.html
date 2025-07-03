@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <title>SOS 요청 목록</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            padding: 40px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            font-size: 32px;
+            margin-bottom: 30px;
+        }
+        .sos-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .sos-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+        .sos-card:hover {
+            transform: translateY(-2px);
+        }
+        .sos-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .sos-info {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+        .openchat-link {
+            color: #007bff;
+            text-decoration: underline;
+        }
+        .sos-status {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status-progress {
+            background-color: #ffeb3b;
+            color: #333;
+        }
+        .status-completed {
+            background-color: #4caf50;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<h1>📌 SOS 요청 목록</h1>
+<div class="sos-container" id="sos-list">
+    <!-- 요청 카드가 여기에 렌더링됨 -->
+</div>
+
+<script>
+    fetch("/api/sos")
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === "success") {
+                const list = document.getElementById("sos-list");
+                data.data.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "sos-card";
+
+                    const statusClass = item.status === "완료" || item.status === "COMPLETED"
+                        ? "status-completed"
+                        : "status-progress";
+
+                    const statusLabel = item.status === "완료" || item.status === "COMPLETED"
+                        ? "✅ 완료"
+                        : "⏳ SOS 중";
+
+                    card.innerHTML = `
+            <a class="sos-title" href="/sos-detail.html?id=${item.id}">${item.title || "제목 없음"}</a>
+            <div class="sos-info">🏛️ 건물: ${item.building || "미지정"}</div>
+            <div class="sos-info">📝 내용: ${item.content || "없음"}</div>
+            <div class="sos-info">💬 오픈채팅: <a class="openchat-link" href="${item.openChatUrl}" target="_blank">입장</a></div>
+            <div class="sos-info">
+              <span class="sos-status ${statusClass}">${statusLabel}</span>
+            </div>
+          `;
+                    list.appendChild(card);
+                });
+            } else {
+                alert("목록을 불러오는 데 실패했습니다.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("서버 오류가 발생했습니다.");
+        });
+</script>
+</body>
+</html>

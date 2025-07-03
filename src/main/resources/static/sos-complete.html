@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>SOS 완료 처리</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            padding: 40px;
+            color: #333;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>🛠 SOS 완료 처리</h1>
+
+<form id="complete-form">
+    <label for="helper-nickname">도움을 준 사람 닉네임</label>
+    <input type="text" id="helper-nickname" name="helperNickname" required />
+
+    <button type="submit">✅ 완료 처리</button>
+</form>
+
+<div class="message" id="message"></div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const sosRequestId = urlParams.get("id");
+
+    if (!sosRequestId) {
+        alert("잘못된 요청입니다.");
+        throw new Error("sosRequestId is missing");
+    }
+
+    document.getElementById("complete-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const helperNickname = document.getElementById("helper-nickname").value;
+
+        fetch("/api/sos/complete", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                sosRequestId: Number(sosRequestId),
+                helperNickname: helperNickname
+            })
+        })
+            .then(res => res.text())
+            .then(msg => {
+                document.getElementById("message").textContent = msg;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("message").textContent = "❌ 오류가 발생했습니다.";
+            });
+    });
+</script>
+
+</body>
+</html>
