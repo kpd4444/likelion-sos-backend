@@ -52,4 +52,8 @@ public class SosRequestService {
     public List<SosRequest> findByHelper(Member helper) {
         return sosRequestRepository.findAllByHelper(helper);
     }
+
+    public List<SosRequest> findByBuilding(BuildingType building) {
+        return sosRequestRepository.findByBuilding(building);
+    }
 }

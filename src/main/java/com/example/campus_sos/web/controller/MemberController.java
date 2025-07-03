@@ -84,6 +84,46 @@ public class MemberController {
         return ResponseEntity.ok("회원가입 완료!");
     }
 
+
+    @PostMapping("/api/reset-password-request")
+    public ResponseEntity<?> sendResetPasswordEmail(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+
+        if (!memberRepository.existsByEmail(email)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("가입된 이메일이 아닙니다.");
+        }
+
+        String token = UUID.randomUUID().toString();
+        emailVerificationService.saveToken(email, token);
+
+        String resetLink = "http://localhost:8080/reset-password.html?email=" + email + "&token=" + token;
+        emailService.sendVerificationEmail(email, resetLink);
+
+        return ResponseEntity.ok("비밀번호 재설정 메일을 보냈습니다.");
+    }
+
+    @PostMapping("/api/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> request) {
+        String email = request.get("email");
+        String token = request.get("token");
+        String newPassword = request.get("newPassword");
+
+        if (!emailVerificationService.isValid(email, token)) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유효하지 않은 토큰입니다.");
+        }
+
+        Member member = memberRepository.findByEmail(email).orElse(null);
+        if (member == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("사용자를 찾을 수 없습니다.");
+        }
+
+        member.setPassword(newPassword); // setter가 없으면 직접 필드 수정
+        memberRepository.save(member);
+
+        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+    }
+
+
     //멤버들 조회
     @GetMapping("/api/members")
     public ResponseEntity<?> getAllMembers() {

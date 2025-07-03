@@ -8,4 +8,5 @@ import java.util.List;
 public interface SosRequestRepository extends JpaRepository<SosRequest, Long> {
     List<SosRequest> findAllByRequester(Member requester);
     List<SosRequest> findAllByHelper(Member helper);
+    List<SosRequest> findByBuilding(BuildingType building);
 }

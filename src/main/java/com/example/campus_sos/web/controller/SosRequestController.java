@@ -2,10 +2,7 @@ package com.example.campus_sos.web.controller;
 
 import com.example.campus_sos.domain.member.Member;
 import com.example.campus_sos.domain.member.MemberRepository;
-import com.example.campus_sos.domain.sosrequest.SosRequest;
-import com.example.campus_sos.domain.sosrequest.SosRequestRepository;
-import com.example.campus_sos.domain.sosrequest.SosRequestService;
-import com.example.campus_sos.domain.sosrequest.SosStatus;
+import com.example.campus_sos.domain.sosrequest.*;
 import com.example.campus_sos.web.form.SosCompleteForm;
 import com.example.campus_sos.web.form.SosRequestDto;
 import com.example.campus_sos.web.form.SosRequestForm;
@@ -76,6 +73,36 @@ public class SosRequestController {
                 "data", dto
         ));
     }
+
+    @GetMapping("/api/sos/by-building")
+    public ResponseEntity<?> getSosByBuilding(@RequestParam String building) {
+        if (building == null || building.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "status", "fail",
+                    "message", "건물 이름은 필수입니다."
+            ));
+        }
+
+        try {
+            BuildingType buildingEnum = BuildingType.valueOf(building.toUpperCase());
+            List<SosRequestDto> result = sosRequestService.findByBuilding(buildingEnum)
+                    .stream()
+                    .map(SosRequestDto::new)
+                    .toList();
+
+            return ResponseEntity.ok(Map.of(
+                    "status", "success",
+                    "data", result
+            ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "status", "fail",
+                    "message", "존재하지 않는 건물입니다. 정확한 building enum 값을 입력해주세요."
+            ));
+        }
+    }
+
+
 
     //sos 로그인한 멤버가 작성한 게시물 조회
     @GetMapping("/api/sos/my-posts")

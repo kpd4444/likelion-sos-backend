@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>건물별 SOS 요청</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 30px;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-bottom: 30px;
+        }
+
+        .sos-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .sos-title {
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .sos-nickname {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .sos-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 12px;
+            background-color: #e67e22;
+            color: white;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>건물별 SOS 요청</h2>
+
+<select id="buildingSelect">
+    <option value="">건물 선택</option>
+    <option value="HAKSAN">학산도서관</option>
+    <option value="ENGINEERING">8호관 (공대)</option>
+    <option value="WELFARE">복지회관</option>
+    <!-- 필요시 더 추가 가능 -->
+</select>
+
+<div id="sosList">
+    <p>건물을 선택해주세요.</p>
+</div>
+
+<script>
+    const selectEl = document.getElementById("buildingSelect");
+    const listEl = document.getElementById("sosList");
+
+    selectEl.addEventListener("change", () => {
+        const building = selectEl.value;
+
+        if (!building) {
+            listEl.innerHTML = "<p>건물을 선택해주세요.</p>";
+            return;
+        }
+
+        fetch(`/api/sos/by-building?building=${building}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status !== "success") {
+                    listEl.innerHTML = `<p>${data.message || "불러오기에 실패했습니다."}</p>`;
+                    return;
+                }
+
+                if (data.data.length === 0) {
+                    listEl.innerHTML = "<p>해당 건물에 등록된 SOS 요청이 없습니다.</p>";
+                    return;
+                }
+
+                listEl.innerHTML = "";
+                data.data.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "sos-card";
+                    card.innerHTML = `
+                            <div class="sos-title">SOS: ${item.title}</div>
+                            <div class="sos-nickname">요청자: ${item.nickname || '익명'}</div>
+                            <div class="sos-status">${item.status === 'COMPLETED' ? '완료됨' : '도움 필요'}</div>
+                        `;
+                    listEl.appendChild(card);
+                });
+            })
+            .catch(err => {
+                listEl.innerHTML = "<p>서버 오류가 발생했습니다.</p>";
+            });
+    });
+</script>
+
+</body>
+</html>
