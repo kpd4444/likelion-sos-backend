@@ -16,9 +16,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -158,6 +160,7 @@ public class SosRequestController {
         memberRepository.save(helper);
 
         // SOS 상태 업데이트
+        request.setHelper(helper);
         request.setStatus(SosStatus.COMPLETED);
         sosRequestRepository.save(request);
 
@@ -214,6 +217,40 @@ public class SosRequestController {
         sosRequestRepository.save(sos);
         return ResponseEntity.ok("수정 완료");
     }
+
+
+    @GetMapping("/api/sos/helped")
+    public ResponseEntity<?> getMyHelpedSosPosts(HttpSession session) {
+        Object loginAttr = session.getAttribute("loginMember");
+
+        if (loginAttr == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("status", "fail", "message", "로그인이 필요합니다."));
+        }
+
+        Member member;
+
+        if (loginAttr instanceof Member) {
+            member = (Member) loginAttr;
+        } else if (loginAttr instanceof Long loginId) {
+            member = memberRepository.findById(loginId)
+                    .orElseThrow(() -> new IllegalStateException("회원 정보를 찾을 수 없습니다."));
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("status", "fail", "message", "세션에 잘못된 값이 저장되어 있습니다."));
+        }
+
+        // 도움을 준 SOS 요청 목록 조회
+        List<SosRequest> helpedRequests = sosRequestService.findByHelper(member);
+
+        List<SosRequestDto> dtoList = helpedRequests.stream()
+                .map(SosRequestDto::new)
+                .toList();
+
+        return ResponseEntity.ok(Map.of("status", "success", "data", dtoList));
+    }
+
+
 
 
 }

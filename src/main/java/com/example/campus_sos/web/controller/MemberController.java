@@ -1,10 +1,13 @@
 package com.example.campus_sos.web.controller;
 
+import com.example.campus_sos.domain.email.EmailService;
+import com.example.campus_sos.domain.email.EmailVerificationService;
 import com.example.campus_sos.domain.member.Member;
 import com.example.campus_sos.domain.member.MemberRepository;
 import com.example.campus_sos.web.form.LoginForm;
 import com.example.campus_sos.web.form.MemberForm;
 import com.example.campus_sos.domain.member.MemberService;
+import com.example.campus_sos.web.form.RegisterForm;
 import com.example.campus_sos.web.form.SosStatusDto;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,18 +25,63 @@ public class MemberController {
 
     private final MemberService memberService;
     private final MemberRepository memberRepository;
+    private final EmailVerificationService emailVerificationService;
+    private final EmailService emailService;
 
     //회원 가입하기
-    @PostMapping("/api/signup")
-    public ResponseEntity<?> register(@RequestBody MemberForm form) {
-        try {
-            memberService.save(form);
-            return ResponseEntity.ok(Map.of("status", "success", "message", "회원가입 성공"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("status", "fail", "message", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("status", "fail", "message", "회원 등록 중 오류가 발생했습니다."));
+//    @PostMapping("/api/signup")
+//    public ResponseEntity<?> register(@RequestBody MemberForm form) {
+//        try {
+//            memberService.save(form);
+//            return ResponseEntity.ok(Map.of("status", "success", "message", "회원가입 성공"));
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest().body(Map.of("status", "fail", "message", e.getMessage()));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(500).body(Map.of("status", "fail", "message", "회원 등록 중 오류가 발생했습니다."));
+//        }
+//    }
+    @PostMapping("/api/register")
+    public ResponseEntity<?> register(@RequestBody RegisterForm form) {
+        if (memberRepository.existsByEmail(form.getEmail())) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("이미 가입된 이메일입니다.");
         }
+
+        // 인증 토큰 생성
+        String token = UUID.randomUUID().toString();
+        emailVerificationService.saveToken(form.getEmail(), token);
+
+        // 이메일 전송
+        String link = "http://localhost:8080/api/verify?email=" + form.getEmail() + "&token=" + token;
+        emailService.sendVerificationEmail(form.getEmail(), link);
+
+        return ResponseEntity.ok("인증 메일을 보냈습니다. 메일함을 확인해주세요.");
+    }
+
+
+    @GetMapping("/api/verify")
+    public ResponseEntity<?> verifyEmail(@RequestParam String email, @RequestParam String token) {
+        if (emailVerificationService.isValid(email, token)) {
+            emailVerificationService.markAsVerified(email);
+            return ResponseEntity.ok("이메일 인증 완료!");
+        } else {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    @PostMapping("/api/complete-register")
+    public ResponseEntity<?> completeRegister(@RequestBody RegisterForm form) {
+        if (!emailVerificationService.isVerified(form.getEmail())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("이메일 인증이 필요합니다.");
+        }
+
+        // 회원 저장
+        String email = form.getEmail();       // 폼에서 이메일 가져오기
+        String password = form.getPassword(); // 폼에서 비밀번호 가져오기
+        String nickname = form.getNickname(); // 폼에서 닉네임 가져오기
+
+        Member member = new Member(email, password, nickname);
+        memberRepository.save(member);
+        return ResponseEntity.ok("회원가입 완료!");
     }
 
     //멤버들 조회

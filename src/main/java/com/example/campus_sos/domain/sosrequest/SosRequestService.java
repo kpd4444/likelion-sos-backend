@@ -49,5 +49,7 @@ public class SosRequestService {
     public List<SosRequest> findByRequester(Member requester) {
         return sosRequestRepository.findAllByRequester(requester);
     }
-
+    public List<SosRequest> findByHelper(Member helper) {
+        return sosRequestRepository.findAllByHelper(helper);
+    }
 }

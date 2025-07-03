@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>나의 도움 내역</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .sos-card {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .sos-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .sos-info {
+            color: #444;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .sos-status {
+            display: inline-block;
+            padding: 5px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            background-color: #ffdd57;
+            color: #333;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .chat-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 6px 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .chat-link:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<h1>나의 도움 내역</h1>
+
+<div id="helped-list">
+    <p>로딩 중...</p>
+</div>
+
+<script>
+    fetch("/api/sos/helped")
+        .then(res => res.json())
+        .then(data => {
+            const container = document.getElementById("helped-list");
+
+            if (data.status !== "success" || !Array.isArray(data.data)) {
+                container.innerHTML = "<p>불러오기 실패</p>";
+                return;
+            }
+
+            if (data.data.length === 0) {
+                container.innerHTML = "<p>도움을 준 내역이 없습니다.</p>";
+                return;
+            }
+
+            container.innerHTML = "";
+
+            data.data.forEach(item => {
+                const card = document.createElement("div");
+                card.className = "sos-card";
+
+                card.innerHTML = `
+                    <div class="sos-title">${item.title || '제목 없음'}</div>
+                    <div class="sos-info"><strong>건물:</strong> ${item.building || '미지정'}</div>
+                    <div class="sos-info"><strong>작성자:</strong> ${item.requesterNickname || '알 수 없음'}</div>
+                    <div class="sos-info"><strong>내용:</strong><br>${item.content || '내용 없음'}</div>
+                    ${item.openChatUrl ? `<a class="chat-link" href="${item.openChatUrl}" target="_blank">🔗 오픈채팅방 입장</a>` : ''}
+                    <div class="sos-status">${item.status === 'COMPLETED' ? '✅ SOS 완료' : item.status}</div>
+                `;
+
+                container.appendChild(card);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById("helped-list").innerHTML = "<p>서버 오류 발생</p>";
+        });
+</script>
+</body>
+</html>

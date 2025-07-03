@@ -29,4 +29,8 @@ public class SosRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Member requester;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "helper_id")
+    private Member helper;
 }
