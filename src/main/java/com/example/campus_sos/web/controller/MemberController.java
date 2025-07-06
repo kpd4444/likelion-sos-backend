@@ -151,7 +151,9 @@ public class MemberController {
         return ResponseEntity.ok(Map.of(
                 "status", "success",
                 "message", "로그인 성공",
-                "nickname", member.getNickname()
+                "nickname", member.getNickname(),
+                "sospoint", member.getSosPoint(),
+                "level", member.getLevel()
         ));
     }
 
