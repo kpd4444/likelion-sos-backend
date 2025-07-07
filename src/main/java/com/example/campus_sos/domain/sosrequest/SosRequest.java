@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Setter
 @Getter
@@ -29,6 +31,10 @@ public class SosRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Member requester;
+
+
+    private LocalDateTime createdAt;
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "helper_id")

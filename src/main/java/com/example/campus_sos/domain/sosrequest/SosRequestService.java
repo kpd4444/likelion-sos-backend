@@ -30,6 +30,8 @@ public class SosRequestService {
         request.setContent(form.getContent());
         request.setOpenChatUrl(form.getOpenChatUrl());
         request.setRequester(member);
+        request.setCreatedAt(form.getTimestamp());
+
 
         sosRequestRepository.save(request);
     }
