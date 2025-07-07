@@ -9,10 +9,12 @@ import com.example.campus_sos.web.form.SosRequestForm;
 import com.example.campus_sos.web.form.SosUpdateForm;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +49,7 @@ public class SosRequestController {
     @GetMapping("/api/sos")
     public ResponseEntity<?> getAllRequests() {
         List<SosRequestDto> result = sosRequestService.findAll().stream()
+                .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt())) // 최신순 정렬
                 .map(SosRequestDto::new)
                 .toList();
 
@@ -75,7 +78,10 @@ public class SosRequestController {
     }
 
     @GetMapping("/api/sos/by-building")
-    public ResponseEntity<?> getSosByBuilding(@RequestParam String building) {
+    public ResponseEntity<?> getSosByBuilding(
+            @RequestParam String building,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime after
+    ) {
         if (building == null || building.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of(
                     "status", "fail",
@@ -85,8 +91,18 @@ public class SosRequestController {
 
         try {
             BuildingType buildingEnum = BuildingType.valueOf(building.toUpperCase());
-            List<SosRequestDto> result = sosRequestService.findByBuilding(buildingEnum)
-                    .stream()
+
+            List<SosRequest> requests = sosRequestService.findByBuilding(buildingEnum);
+
+            if (after != null) {
+                requests = requests.stream()
+                        .filter(r -> r.getCreatedAt() != null && r.getCreatedAt().isAfter(after))
+                        .toList();
+            }
+
+            // 최신순 정렬 후 Dto 변환
+            List<SosRequestDto> result = requests.stream()
+                    .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
                     .map(SosRequestDto::new)
                     .toList();
 
