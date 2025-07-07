@@ -276,8 +276,4 @@ public class SosRequestController {
 
         return ResponseEntity.ok(Map.of("status", "success", "data", dtoList));
     }
-
-
-
-
 }

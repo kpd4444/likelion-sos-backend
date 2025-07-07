@@ -5,7 +5,6 @@ import com.example.campus_sos.domain.email.EmailVerificationService;
 import com.example.campus_sos.domain.member.Member;
 import com.example.campus_sos.domain.member.MemberRepository;
 import com.example.campus_sos.web.form.LoginForm;
-import com.example.campus_sos.web.form.MemberForm;
 import com.example.campus_sos.domain.member.MemberService;
 import com.example.campus_sos.web.form.RegisterForm;
 import com.example.campus_sos.web.form.SosStatusDto;
